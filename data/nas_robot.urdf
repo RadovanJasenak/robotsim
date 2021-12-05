@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<robot name="nas_robot">
+
+<!-- ma len 1 link => jednu cast - valec-->
+<link name="telo">
+    <visual name='telo_visual'>
+        <!-- xyz je posunutie a roll pitch yaw-orientacia/rotacia v priestore-->
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.4 0.2 0.1"/>
+            </geometry>
+        </visual>
+    <collision name='telo_collision'>
+        <geometry>
+            <box size="0.4 0.2 0.1"/>
+        </geometry>
+    </collision>
+</link>
+
+<link name="lave_koleso">
+<visual name="lave_koleso_visual">
+<origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+<geometry>
+<cylinder radius="0.1" length="0.05"/>
+</geometry>
+</visual>
+<collision name="lave_koleso_collision">
+<origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+<geometry>
+<cylinder radius="0.1" length="0.05"/>
+</geometry>
+</collision>
+</link>
+
+<joint type="continuous" name="lave_koleso_zaves">
+<origin xyz="0.1 0.15 0" rpy="0 0 0"/>
+<child link="lave_koleso"/>
+<parent link="telo"/>
+<axis xyz="0 1 0" rpy="0 0 0"/>
+</joint>
+
+</robot>
