@@ -45,8 +45,6 @@
 
   <link name='telo'>
     <!--pose>0 0 0.1 0 0 0</pose-->
-
-    <!-- parametre sasi -->
     <visual name='telo_visual'>
       <origin xyz="0 0 0" rpy=" 0 0 0"/>
       <geometry>
@@ -55,7 +53,6 @@
       <material name="oranzova"/>
     </visual>
     <collision name='telo_collision'>
-      <!-- tu mozno chyba origin  -->
       <geometry>
         <box size="${dlzka} ${sirka} ${vyska}"/>
       </geometry>
@@ -71,16 +68,14 @@
     </inertial>
   </link>
 
-  <!-- ukoncila som link telo a zacala novy link -->
+
   <link name="vsesmerove_koleso">
-    <!-- vsesmerove koleso -->
     <visual name='vsesmerove_visual'>
       <origin xyz="-0.15 0 -0.05" rpy=" 0 0 0"/>
       <geometry>
         <sphere radius="0.05"/>
       </geometry>
     </visual>
-
     <collision name='vsesmerove_collision'>
       <origin xyz="-0.15 0 -0.05" rpy=" 0 0 0"/>
       <geometry>
@@ -97,12 +92,10 @@
         </friction>
       </surface>
     </collision>
-
     <!-- asi chyba inertia  -->
-
   </link>
 
-  <!-- asi chyba joint na vsesmerove takze tu je -->
+
   <joint name="vsesmerove_koleso_upevnenie" type="fixed">
     <origin xyz="-0.1 0 0.05" rpy="0 0 0"/>
     <parent link="telo"/>
@@ -120,14 +113,12 @@
         </geometry>
         <material name="biela"/>
       </visual>
-
       <collision name="${prefix}_koleso_collision">
         <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
         <geometry>
           <cylinder radius="0.1" length="0.05"/>
         </geometry>
       </collision>
-
       <inertial>
         <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
         <mass value="5"/>
