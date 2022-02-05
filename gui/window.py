@@ -16,6 +16,7 @@ class App:
             raise Exception("glfw window can not be created")
 
         glfw.set_window_pos(self.window, 400, 200)
+        glfw.set_window_size_callback(self.window, self.window_resize)
         glfw.make_context_current(self.window)
 
         glClearColor(0.2, 0.2, 0.2, 1)
@@ -32,7 +33,9 @@ class App:
             glClear(GL_COLOR_BUFFER_BIT)
             glUseProgram(self.shader)
 
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4)
+            glBindVertexArray(self.square.vao)
+            # glDrawArrays(GL_TRIANGLE_STRIP, 0, 4)
+            glDrawElements(GL_TRIANGLES, len(self.square.indices), GL_UNSIGNED_INT, None)
 
             glfw.swap_buffers(self.window)
         glfw.terminate()
@@ -54,17 +57,29 @@ class App:
         self.square.destroy()
         glfw.terminate()
 
+    def window_resize(self, window, width, height):
+        glViewport(0, 0, width, height)
+
 
 class Square:
     def __init__(self):
         self.vertices = []
         self.get_vertices(0.4, 0.2)
+        self.indices = [0, 1, 2,
+                        1, 2, 3]
         self.vertices = np.array(self.vertices, dtype=np.float32)
-        self.vertex_count = 4
+        self.indices = np.array(self.indices, dtype=np.uint32)
+
+        self.vao = glGenVertexArrays(1)
+        glBindVertexArray(self.vao)
 
         self.vbo = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
         glBufferData(GL_ARRAY_BUFFER, self.vertices.nbytes, self.vertices, GL_STATIC_DRAW)
+
+        self.ebo = glGenBuffers(1)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ebo)
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.indices.nbytes, self.indices, GL_STATIC_DRAW)
 
         glEnableVertexAttribArray(0)
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 24, ctypes.c_void_p(0))
@@ -75,13 +90,14 @@ class Square:
         # only a square with center at 0,0
         self.vertices = [-width/2, -length/2, 0.0, 1.0, 0.0, 0.0,
                          width/2, -length/2, 0.0, 0.0, 1.0, 0.0,
-                         -width/2, length/2, 0.0, 1.0, 1.0, 1.0,
-                         width / 2, length / 2, 0.0, 0.0, 0.0, 1.0]
+                         -width/2, length/2, 0.0, 0.0, 0.0, 1.0,
+                         width / 2, length / 2, 0.0, 1.0, 1.0, 1.0]
 
     def destroy(self):
         # free all buffer objects
-        glDeleteBuffers(1, (self.vbo,))
+        glDeleteBuffers(2, (self.vbo, self.ebo))
+        glDeleteVertexArrays(1, (self.vao,))
 
 
 if __name__ == '__main__':
-    myapp = App(1200, 720, "title")
+    myapp = App(1200, 720, "robotsim")
