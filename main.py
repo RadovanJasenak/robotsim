@@ -8,4 +8,4 @@ from gui import window
 if __name__ == '__main__':
     Robot2 = robot.Robot("nas_robot_latest.xacro")
     Robot2.describe()
-    # app = window.App()
+    app = window.App(Robot2)

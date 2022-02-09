@@ -9,19 +9,19 @@ class Robot:
 
     def __init__(self, file_name):
         self.wheels = []  # TODO: maybe will be needed in the future
-        self.c_joints = []  # joints connected to base link TODO: maybe all links and joints should have an array
 
         urdf_links, urdf_joints = self.extract_xacro(file_name)
-        links = self.create_link_objects(urdf_links)
-        joints = self.create_joint_objects(urdf_joints)
-        self.base_link = self.find_base_link(links, joints)
-        self.connect_joints_links(links, joints)
+        self.links = self.create_link_objects(urdf_links)
+        self.joints = self.create_joint_objects(urdf_joints)
+        # create base_link attribute and pop the object from links List, base link is box link
+        self.base_link = self.find_base_link(self.links, self.joints)
+        self.connect_joints_links(self.links, self.joints)
 
     def describe(self):
         print(f"Base link (name, dimensions LWH, origin):\n{self.base_link.name}, {self.base_link.length} "
-              f"{self.base_link.width} {self.base_link.height}, {self.base_link.originXYZ}\n")
+              f"{self.base_link.width} {self.base_link.height}, {self.base_link.origin}\n")
 
-        for joint in self.c_joints:
+        for joint in self.base_link.connected_joints:
             joint.describe()
             joint.child.describe()
 
@@ -100,29 +100,45 @@ class Robot:
                 base_link = name
         for link in links:
             if base_link == link.name:
+                link.is_base_link = True
                 base_link = link
 
         if base_link.shape != 'box':
             raise error.URDFerror
-        # links.pop(links.index(base_link))
         return base_link
 
     def connect_joints_links(self, links, joints):
         # create tree structure of the robot
-        # joints are only attached for base link
-        b_parent = self.base_link.name
-
         for joint in joints:
-            j_child = joint.child
-            j_parent = joint.parent
-            if b_parent == j_parent:
-                self.c_joints.append(joint)
-
+            # connecting links to joints
             for link in links:
-                if link.name == j_child:
+                # connect links to joints as children
+                if link.name == joint.child:
                     joint.child = link
-                if link.name == j_parent:
+                # connect links to joints as parents
+                if link.name == joint.parent:
                     joint.parent = link
+
+        # connect joints to links
+        for link in links:
+            for joint in joints:
+                if link.name == joint.parent.name or link.name == joint.child.name:
+                    link.connected_joints.append(joint)
+
+        # print("1==============================")
+        # for joint in joints:
+        #     print(joint.child.name)
+        # print("2==============================")
+        # for joint in joints:
+        #     print(joint.parent.name)
+        # print("3==============================")
+        # for link in links:
+        #     print(f"This is link {link.name}")
+        #     for item in link.connected_joints:
+        #         print(item.name)
+        # print("3==============================")
+        # for link in links:
+        #     print(link.is_base_link)
 
 
 def string_split(string_list):

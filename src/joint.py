@@ -5,8 +5,8 @@ class Joint:
         self.joint_type = joint_type
         self.parent = parent
         self.child = child
-        self.originXYZ = origin
+        self.origin = origin
 
     def describe(self):
         print(f"Joint(name, type, parent, child, origin):\n{self.name}, {self.joint_type}, {self.parent.name}, "
-              f"{self.child.name}, {self.originXYZ}\n")
+              f"{self.child.name}, {self.origin}\n")
