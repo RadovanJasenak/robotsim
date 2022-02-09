@@ -16,7 +16,7 @@ class App:
             glfw.terminate()
             raise Exception("glfw window can not be created")
 
-        glfw.set_window_pos(self.window, 2000, 400)
+        glfw.set_window_pos(self.window, 400, 200)
         glfw.set_window_size_callback(self.window, self.window_resize)  # window resizing
         glfw.make_context_current(self.window)  # openGL context
 
@@ -99,7 +99,7 @@ class Square:
         self.vertices = [-width/2, -length/2, 0.0, 1.0, 0.0, 0.0,
                          width/2, -length/2, 0.0, 0.0, 1.0, 0.0,
                          -width/2, length/2, 0.0, 0.0, 0.0, 1.0,
-                         width / 2, length / 2, 0.0, 1.0, 1.0, 1.0]
+                         width/2, length/2, 0.0, 1.0, 1.0, 1.0]
 
     def destroy(self):
         # free all buffer objects

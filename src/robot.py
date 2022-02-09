@@ -18,8 +18,8 @@ class Robot:
         self.connect_joints_links(self.links, self.joints)
 
     def describe(self):
-        print(f"Base link (name, dimensions LWH, origin):\n{self.base_link.name}, {self.base_link.length} "
-              f"{self.base_link.width} {self.base_link.height}, {self.base_link.origin}\n")
+        print(f"Base link (name, dimensions LWH, xyz, rpy):\n{self.base_link.name}, {self.base_link.length} "
+              f"{self.base_link.width} {self.base_link.height}, {self.base_link.xyz}, {self.base_link.rpy}\n")
 
         for joint in self.base_link.connected_joints:
             joint.describe()
@@ -55,21 +55,24 @@ class Robot:
                 length = dimensions[0]
                 width = dimensions[1]
                 height = dimensions[2]
-                origin = link.find("visual").find("origin").attrib.get("xyz")
-                links.append(Box(name, length, width, height, origin))
+                xyz = link.find("visual").find("origin").attrib.get("xyz")
+                rpy = link.find("visual").find("origin").attrib.get("rpy")
+                links.append(Box(name, length, width, height, xyz, rpy))
 
             if shape == 'cylinder':
                 name = link.attrib.get("name")
                 radius = link.find("visual").find('geometry')[0].attrib.get("radius")
                 length = link.find("visual").find('geometry')[0].attrib.get("length")
-                origin = link.find("visual").find("origin").attrib.get("xyz")
-                links.append(Cylinder(name, float(radius), float(length), origin))
+                xyz = link.find("visual").find("origin").attrib.get("xyz")
+                rpy = link.find("visual").find("origin").attrib.get("rpy")
+                links.append(Cylinder(name, float(radius), float(length), xyz, rpy))
 
             if shape == 'sphere':
                 name = link.attrib.get("name")
                 radius = link.find("visual").find('geometry')[0].attrib.get("radius")
-                origin = link.find("visual").find("origin").attrib.get("xyz")
-                links.append(Sphere(name, float(radius), origin))
+                xyz = link.find("visual").find("origin").attrib.get("xyz")
+                rpy = link.find("visual").find("origin").attrib.get("rpy")
+                links.append(Sphere(name, float(radius), xyz, rpy))
         return links
 
     def create_joint_objects(self, urdf_joints):
@@ -80,8 +83,9 @@ class Robot:
             jtype = joint.get("type")
             parent = joint.find("parent").get("link")
             child = joint.find("child").get("link")
-            origin = joint.find("origin").get("xyz")
-            joints.append(Joint(name, jtype, parent, child, origin))
+            xyz = joint.find("origin").get("xyz")
+            rpy = joint.find("origin").get("rpy")
+            joints.append(Joint(name, jtype, parent, child, xyz, rpy))
         return joints
 
     def find_base_link(self, links, joints):
