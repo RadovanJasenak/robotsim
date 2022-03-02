@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 # run from terminal and have ROS installed
 # source /opt/ros/noetic/setup.bash
 # /usr/bin/python3 main.py

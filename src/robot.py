@@ -31,7 +31,9 @@ class Robot:
         urdf_links = list()
         urdf_joints = list()
 
-        result = subprocess.run(['/opt/ros/noetic/bin/xacro', f'data/{file_name}'], stdout=subprocess.PIPE)
+        print("*** nacitavam ***" + file_name)
+        #result = subprocess.run(['/opt/ros/noetic/bin/xacro', f'data/{file_name}'], stdout=subprocess.PIPE)
+        result = subprocess.run(['./xacro.sh', f'data/{file_name}'], stdout=subprocess.PIPE)
         urdf_file = result.stdout.decode('utf-8')
         root = Et.fromstring(urdf_file)
 
