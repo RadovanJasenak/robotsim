@@ -12,7 +12,7 @@ class App:
     def __init__(self, robot: Robot):
         if not glfw.init():
             raise Exception("glfw can not be initialized")
-        self.window = glfw.create_window(1920, 1080, "RobotSim", None, None)
+        self.window = glfw.create_window(1280, 720, "RobotSim", None, None)
         if not self.window:
             glfw.terminate()
             raise Exception("glfw window can not be created")
@@ -21,16 +21,36 @@ class App:
         glfw.set_window_size_callback(self.window, self.window_resize)  # window resizing
         glfw.make_context_current(self.window)  # openGL context
 
-        glClearColor(0.2, 0.2, 0.2, 1)
-        glEnable(GL_DEPTH_TEST)
-
         # create openGL shaders, vertex and fragment
         self.shader = self.create_shader("gui/shaders/vertex.txt", "gui/shaders/fragment.txt")
         glUseProgram(self.shader)
 
-        self.rotation_location = glGetUniformLocation(self.shader, "rotation")
+        glClearColor(0.1, 0.2, 0.2, 1)
+        glEnable(GL_DEPTH_TEST)
 
-        self.square = Square(robot.base_link.length, robot.base_link.width)
+        # create perspective projection matrix
+        self.projection = pyrr.matrix44.create_perspective_projection(
+            fovy=45.0, aspect=1280/720,
+            near=0.1, far=100.0)
+
+        # translate (move) the object in world space
+        self.translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([0, 0, 0]))
+
+        # create view matrix, values are negated bc when camera moves to one direction, the scene moves to the opposite
+        self.view = pyrr.matrix44.create_from_translation(pyrr.Vector3([-1, 0, -5]))
+
+        # get the uniform's location
+        self.model_location = glGetUniformLocation(self.shader, "model")
+        self.projection_location = glGetUniformLocation(self.shader, "projection")
+        self.view_location = glGetUniformLocation(self.shader, "view")
+
+        # upload the projection & view matrices to the shader
+        glUniformMatrix4fv(
+            self.projection_location, 1,
+            GL_FALSE, self.projection
+        )
+        glUniformMatrix4fv(self.view_location, 1, GL_FALSE, self.view)
+
         self.cube = Cube(robot.base_link.length, robot.base_link.width, robot.base_link.height)
 
         self.main_loop()
@@ -44,13 +64,13 @@ class App:
 
             rot_x = pyrr.Matrix44.from_x_rotation(0.5 * glfw.get_time())
             rot_y = pyrr.Matrix44.from_y_rotation(0.8 * glfw.get_time())
-            glUniformMatrix4fv(self.rotation_location, 1, GL_FALSE, pyrr.matrix44.multiply(rot_x, rot_y))
+
+            rotation = pyrr.matrix44.multiply(rot_x, rot_y)
+            model = pyrr.matrix44.multiply(rotation, self.translation)
+            glUniformMatrix4fv(self.model_location, 1, GL_FALSE, model)
 
             glBindVertexArray(self.cube.vao)  # bind the VAO that is being drawn
             glDrawElements(GL_TRIANGLES, len(self.cube.indices), GL_UNSIGNED_INT, None)
-
-            glBindVertexArray(self.square.vao)  # bind the VAO that is being drawn
-            glDrawElements(GL_TRIANGLES, len(self.square.indices), GL_UNSIGNED_INT, None)
 
             glfw.swap_buffers(self.window)  # swap buffers - double buffering
         self.quit()
@@ -71,13 +91,17 @@ class App:
     def quit(self):
         # free allocated space before exiting
         glDeleteProgram(self.shader)
-        self.square.destroy()
+        # self.square.destroy()
         self.cube.destroy()
         glfw.terminate()
 
     def window_resize(self, window, width, height):
         # window resizing function
         glViewport(0, 0, width, height)
+        projection_on_resize = pyrr.matrix44.create_perspective_projection(
+            fovy=45.0, aspect=width/height,
+            near=0.1, far=100.0)
+        glUniformMatrix4fv(self.projection_location, 1, GL_FALSE, projection_on_resize)
 
 
 class Square:
@@ -153,22 +177,22 @@ class Cube:
 
         # describing data stored in VBO, 0 - location, 1 - color
         glEnableVertexAttribArray(0)
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 24, ctypes.c_void_p(0))
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, self.vertices.itemsize * 6, ctypes.c_void_p(0))
         glEnableVertexAttribArray(1)
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 24, ctypes.c_void_p(12))
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, self.vertices.itemsize * 6, ctypes.c_void_p(12))
 
     def get_vertices(self, length: float, width: float, height: float):
         # only a square with center at 0,0
         # first 3 numbers are XYZ, 3 more are RGB
         self.vertices = [-width/2, -length/2, height/2, 1.0, 0.0, 0.0,
                          width/2, -length/2, height/2, 0.0, 1.0, 0.0,
-                         width / 2, length / 2, height / 2, 1.0, 1.0, 1.0,
+                         width/2, length/2, height/2, 1.0, 1.0, 1.0,
                          -width/2, length/2, height/2, 0.0, 0.0, 1.0,
 
-                         -width / 2, -length / 2, -height / 2, 0.0, 1.0, 0.0,
-                         width / 2, -length / 2, -height/2, 1.0, 0.0, 0.0,
-                         width / 2, length / 2, -height/2, 0.0, 0.0, 1.0,
-                         -width / 2, length / 2, -height/2, 1.0, 1.0, 1.0
+                         -width/2, -length/2, -height/2, 0.0, 1.0, 0.0,
+                         width/2, -length/2, -height/2, 1.0, 0.0, 0.0,
+                         width/2, length/2, -height/2, 0.0, 0.0, 1.0,
+                         -width/2, length/2, -height/2, 1.0, 1.0, 1.0
                          ]
 
     def destroy(self):
