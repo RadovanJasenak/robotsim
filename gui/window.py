@@ -34,10 +34,15 @@ class App:
             near=0.1, far=100.0)
 
         # translate (move) the object in world space
-        self.translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([0, 0, 0]))
+        self.robot_body_model_translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([0, 0.5, 0]))
+        self.scene_floor_model_translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([0, 0, 0]))
 
         # create view matrix, values are negated bc when camera moves to one direction, the scene moves to the opposite
-        self.view = pyrr.matrix44.create_from_translation(pyrr.Vector3([-1, 0, -5]))
+        # eye - cannot be [0, 0, 0], target i am looking at , up vector of the camera
+        self.loookat = pyrr.matrix44.create_look_at(
+            pyrr.Vector3([0, 2, 3]),
+            pyrr.Vector3([0, 0, 0]),
+            pyrr.Vector3([0, 1, 0]))
 
         # get the uniform's location
         self.model_location = glGetUniformLocation(self.shader, "model")
@@ -49,9 +54,10 @@ class App:
             self.projection_location, 1,
             GL_FALSE, self.projection
         )
-        glUniformMatrix4fv(self.view_location, 1, GL_FALSE, self.view)
+        glUniformMatrix4fv(self.view_location, 1, GL_FALSE, self.loookat)
 
         self.cube = Cube(robot.base_link.length, robot.base_link.width, robot.base_link.height)
+        self.scene_floor = Square(2, 0.01, 2)
 
         self.main_loop()
 
@@ -66,11 +72,15 @@ class App:
             rot_y = pyrr.Matrix44.from_y_rotation(0.8 * glfw.get_time())
 
             rotation = pyrr.matrix44.multiply(rot_x, rot_y)
-            model = pyrr.matrix44.multiply(rotation, self.translation)
+            model = pyrr.matrix44.multiply(rotation, self.robot_body_model_translation)
             glUniformMatrix4fv(self.model_location, 1, GL_FALSE, model)
 
             glBindVertexArray(self.cube.vao)  # bind the VAO that is being drawn
             glDrawElements(GL_TRIANGLES, len(self.cube.indices), GL_UNSIGNED_INT, None)
+
+            glUniformMatrix4fv(self.model_location, 1, GL_FALSE, self.scene_floor_model_translation)
+            glBindVertexArray(self.scene_floor.vao)  # bind the VAO that is being drawn
+            glDrawElements(GL_TRIANGLES, len(self.scene_floor.indices), GL_UNSIGNED_INT, None)
 
             glfw.swap_buffers(self.window)  # swap buffers - double buffering
         self.quit()
@@ -105,15 +115,13 @@ class App:
 
 
 class Square:
-    def __init__(self, length, width):
-        self.vertices = [-0.8, 0.8, 0.0, 1.0, 0.0, 0.0,
-                         -0.8, 0.5, 0.0, 0.0, 1.0, 0.0,
-                         -0.5,  0.5, 0.0, 0.0, 0.0, 1.0,
-                         -0.5, 0.8, 0.0, 1.0, 1.0, 1.0]
-        # self.vertices = []
-        # self.get_vertices(length, width)
+    def __init__(self, lengthX, lengthY, lengthZ):
+        self.vertices = [-lengthX / 2, -lengthY / 2, lengthZ / 2, 1.0, 0.0, 0.0,
+                         lengthX / 2, -lengthY / 2, lengthZ / 2, 0.0, 1.0, 0.0,
+                         -lengthX / 2, lengthY / 2, -lengthZ / 2, 0.0, 0.0, 1.0,
+                         lengthX / 2, lengthY / 2, -lengthZ / 2, 1.0, 1.0, 1.0]
         self.indices = [0, 1, 2,
-                        0, 2, 3]  # describes which vertices will be used to draw to avoid re-drawing existing vertices
+                        1, 2, 3]  # describes which vertices will be used to draw to avoid re-drawing existing vertices
         # make numpy arrays to work with openGL
         self.vertices = np.array(self.vertices, dtype=np.float32)
         self.indices = np.array(self.indices, dtype=np.uint32)
@@ -134,14 +142,6 @@ class Square:
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 24, ctypes.c_void_p(0))
         glEnableVertexAttribArray(1)
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 24, ctypes.c_void_p(12))
-
-    def get_vertices(self, length: float, width: float):
-        # only a square with center at 0,0
-        # first 3 numbers are XYZ, 3 more are RGB
-        self.vertices = [-width/2, -length/2, 0.0, 1.0, 0.0, 0.0,
-                         width/2, -length/2, 0.0, 0.0, 1.0, 0.0,
-                         -width/2, length/2, 0.0, 0.0, 0.0, 1.0,
-                         width/2, length/2, 0.0, 1.0, 1.0, 1.0]
 
     def destroy(self):
         # free all buffer objects
@@ -199,3 +199,5 @@ class Cube:
         # free all buffer objects
         glDeleteBuffers(2, (self.vbo, self.ebo))
         glDeleteVertexArrays(1, (self.vao,))
+
+
