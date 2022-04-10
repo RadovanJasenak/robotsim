@@ -8,18 +8,17 @@ from src.joint import *
 class Robot:
 
     def __init__(self, file_name):
-        self.wheels = []  # TODO: maybe will be needed in the future
-
-        urdf_links, urdf_joints = self.extract_xacro(file_name)
-        self.links = self.create_link_objects(urdf_links)
+        urdf_links, urdf_joints, materials = self.extract_xacro(file_name)
+        self.links = self.create_link_objects(urdf_links, materials)
         self.joints = self.create_joint_objects(urdf_joints)
         # create base_link attribute and pop the object from links List, base link is box link
         self.base_link = self.find_base_link(self.links, self.joints)
         self.connect_joints_links(self.links, self.joints)
 
     def describe(self):
-        print(f"Base link (name, dimensions LWH, xyz, rpy):\n{self.base_link.name}, {self.base_link.length} "
-              f"{self.base_link.width} {self.base_link.height}, {self.base_link.xyz}, {self.base_link.rpy}\n")
+        print(f"Base link (name, dimensions LWH, xyz, rpy, color):\n{self.base_link.name}, {self.base_link.length} "
+              f"{self.base_link.width} {self.base_link.height}, {self.base_link.xyz}, {self.base_link.rpy}, "
+              f"{self.base_link.color}\n")
 
         for joint in self.base_link.connected_joints:
             joint.describe()
@@ -30,6 +29,7 @@ class Robot:
         # reads complete urdf - links and joints
         urdf_links = list()
         urdf_joints = list()
+        materials = {}
 
         print("*** nacitavam *** " + file_name)
         # result = subprocess.run(['/opt/ros/noetic/bin/xacro', f'data/{file_name}'], stdout=subprocess.PIPE)
@@ -43,10 +43,20 @@ class Robot:
         for joint in root.iter("joint"):
             urdf_joints.append(joint)
 
-        return urdf_links, urdf_joints
+        for child in root:
+            if child.tag == "material":
+                name = child.attrib["name"]
+                value = child[0].attrib["rgba"]
+                value = value.split(" ")
+                value = [float(x) for x in value]
+                value = [round(x, 3) for x in value]
+                materials[name] = value
 
-    def create_link_objects(self, urdf_links):
+        return urdf_links, urdf_joints, materials
+
+    def create_link_objects(self, urdf_links, materials):
         # extract values from urdf
+
         links = list()
         for link in urdf_links:
             shape = link.find("visual").find('geometry')[0].tag
@@ -59,7 +69,9 @@ class Robot:
                 height = dimensions[2]
                 xyz = link.find("visual").find("origin").attrib.get("xyz")
                 rpy = link.find("visual").find("origin").attrib.get("rpy")
-                links.append(Box(name, length, width, height, xyz, rpy))
+                color = link.find("visual").find("material").attrib.get("name")
+                color = materials[color]
+                links.append(Box(name, length, width, height, xyz, rpy, color))
 
             if shape == 'cylinder':
                 name = link.attrib.get("name")
@@ -67,14 +79,18 @@ class Robot:
                 length = link.find("visual").find('geometry')[0].attrib.get("length")
                 xyz = link.find("visual").find("origin").attrib.get("xyz")
                 rpy = link.find("visual").find("origin").attrib.get("rpy")
-                links.append(Cylinder(name, float(radius), float(length), xyz, rpy))
+                color = link.find("visual").find("material").attrib.get("name")
+                color = materials[color]
+                links.append(Cylinder(name, float(radius), float(length), xyz, rpy, color))
 
             if shape == 'sphere':
                 name = link.attrib.get("name")
                 radius = link.find("visual").find('geometry')[0].attrib.get("radius")
                 xyz = link.find("visual").find("origin").attrib.get("xyz")
                 rpy = link.find("visual").find("origin").attrib.get("rpy")
-                links.append(Sphere(name, float(radius), xyz, rpy))
+                color = link.find("visual").find("material").attrib.get("name")
+                color = materials[color]
+                links.append(Sphere(name, float(radius), xyz, rpy, color))
         return links
 
     def create_joint_objects(self, urdf_joints):

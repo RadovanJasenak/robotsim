@@ -8,14 +8,29 @@
   <xacro:property name="rkolesa" value="0.2"/>
   <xacro:property name="hkolesa" value="0.1"/>
 
-  <material name="oranzova">
-    <color rgba="1 0.65 0 1"/>
+  <material name="black">
+    <color rgba="0.0 0.0 0.0 1.0"/>
   </material>
-  <material name="cervena">
-    <color rgba="1 0 0 1"/>
+  <material name="blue">
+    <color rgba="0.203125 0.23828125 0.28515625 1.0"/>
   </material>
-  <material name="biela">
-    <color rgba="1 1 1 1"/>
+  <material name="green">
+    <color rgba="0.0 0.8 0.0 1.0"/>
+  </material>
+  <material name="grey">
+    <color rgba="0.2 0.2 0.2 1.0"/>
+  </material>
+  <material name="orange">
+    <color rgba="1.0 0.423529411765 0.0392156862745 1.0"/>
+  </material>
+  <material name="brown">
+    <color rgba="0.870588235294 0.811764705882 0.764705882353 1.0"/>
+  </material>
+  <material name="red">
+    <color rgba="0.80078125 0.12890625 0.1328125 1.0"/>
+  </material>
+  <material name="white">
+    <color rgba="1.0 1.0 1.0 1.0"/>
   </material>
 
 
@@ -50,7 +65,7 @@
       <geometry>
         <box size="${dlzka} ${sirka} ${vyska}"/>
       </geometry>
-      <material name="oranzova"/>
+      <material name="orange"/>
     </visual>
     <collision name='telo_collision'>
       <geometry>
@@ -75,6 +90,7 @@
       <geometry>
         <sphere radius="0.05"/>
       </geometry>
+      <material name="blue"/>
     </visual>
     <collision name='vsesmerove_collision'>
       <origin xyz="-0.15 0 -0.05" rpy=" 0 0 0"/>
@@ -111,7 +127,7 @@
         <geometry>
           <cylinder radius="0.1" length="0.05"/>
         </geometry>
-        <material name="biela"/>
+        <material name="white"/>
       </visual>
       <collision name="${prefix}_koleso_collision">
         <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
@@ -197,7 +213,7 @@
       <geometry>
         <box size="0.05 0.05 0.02"/>
       </geometry>
-      <material name="cervena"/>
+      <material name="red"/>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
