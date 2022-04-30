@@ -2,8 +2,15 @@
 
 in vec4 fragmentColor;
 
+uniform vec3 lightColor;
+
 out vec4 color;
 
 void main(){
-    color = vec4(fragmentColor);
+    // ambient lighting
+    float ambientStrength = 0.2;
+    vec3 ambient = ambientStrength * lightColor;
+
+    vec4 result = vec4(ambient, 1.0) * fragmentColor;
+    color = result;
 }

@@ -49,7 +49,6 @@ class Robot:
                 value = child[0].attrib["rgba"]
                 value = value.split(" ")
                 value = [float(x) for x in value]
-                value = [round(x, 3) for x in value]
                 materials[name] = value
 
         return urdf_links, urdf_joints, materials
