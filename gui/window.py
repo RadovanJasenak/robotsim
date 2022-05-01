@@ -35,8 +35,9 @@ class App:
             near=0.1, far=100.0)
 
         # view matrix, eye - position of camera cannot be [0, 0, 0], target i am looking at , up vector of the camera
+        camera_position = pyrr.Vector3([0, 1, 4])
         self.look_at = pyrr.matrix44.create_look_at(
-            pyrr.Vector3([0, 1, 4]),
+            camera_position,
             pyrr.Vector3([0, 1, 0]),
             pyrr.Vector3([0, 1, 0]))
 
@@ -62,6 +63,8 @@ class App:
         self.scene = Scene()
         self.light = Light([0., 3., 1.], [1., 1., 1.])
         glUniform3fv(glGetUniformLocation(self.shader, "lightColor"), 1, self.light.color)
+        glUniform3fv(glGetUniformLocation(self.shader, "lightPos"), 1, self.light.position)
+        glUniform3fv(glGetUniformLocation(self.shader, "viewPos"), 1, self.look_at[0])
 
         self.main_loop()
 

@@ -9,9 +9,14 @@ uniform mat4 view; // view matrix 'camera'
 uniform mat4 model; // combined translation and rotation
 
 out vec4 fragmentColor;
+out vec3 Normal;
+out vec3 fragPos;
 
 void main(){
             // clip space * view space * world space * local space
     gl_Position = projection * view *  model * vec4(vertexPos, 1.0);
     fragmentColor = vertexColor;
+    //lighting
+    Normal = mat3(transpose(inverse(model))) * vertexNormal; // to make sure lighting is correct when doing transformations
+    fragPos = vec3(model * vec4(vertexPos, 1.0)); // lighting calculation is done in world space
 }
