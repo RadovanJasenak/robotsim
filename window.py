@@ -1,16 +1,15 @@
 import glfw
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileShader, compileProgram
-import numpy as np
-import ctypes
-import gui.mesh_loader as ml
+import mesh_loader as ml
 from src.robot import Robot
 import pyrr
 
 
 class App:
     # creating and checking glfw window
-    def __init__(self, robot: Robot):
+    def __init__(self, robotFilepath):
+
         if not glfw.init():
             raise Exception("glfw can not be initialized")
         self.window = glfw.create_window(1280, 720, "RobotSim", None, None)
@@ -23,7 +22,7 @@ class App:
         glfw.make_context_current(self.window)  # openGL context
 
         # create openGL shaders, vertex and fragment
-        self.shader = self.create_shader("gui/shaders/vertex.txt", "gui/shaders/fragment.txt")
+        self.shader = self.create_shader("shaders/vertex.txt", "shaders/fragment.txt")
         glUseProgram(self.shader)
 
         glClearColor(0.1, 0.2, 0.2, 1)
@@ -54,11 +53,12 @@ class App:
         glUniformMatrix4fv(self.projection_location, 1, GL_FALSE, self.projection)
         glUniformMatrix4fv(self.view_location, 1, GL_FALSE, self.look_at)
 
-        self.robot_body = ml.MeshLoader("models/cube.obj", robot.base_link.color)
+        self.robot = Robot(robotFilepath)
+        self.robot_body = ml.MeshLoader("models/cube.obj", self.robot.base_link.color)
         self.robot_body_scale = pyrr.matrix44.create_from_scale(
-            pyrr.Vector3([robot.base_link.length,
-                          robot.base_link.height,
-                          robot.base_link.width])
+            pyrr.Vector3([self.robot.base_link.length,
+                          self.robot.base_link.height,
+                          self.robot.base_link.width])
         )
         self.scene = Scene()
         self.light = Light([0., 3., 1.], [1., 1., 1.])
@@ -75,12 +75,10 @@ class App:
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  # refresh screen
             glUseProgram(self.shader)  # here to make sure the correct one is being used
 
-            rot_x = pyrr.Matrix44.from_x_rotation(0.5 * glfw.get_time())
-            rot_y = pyrr.Matrix44.from_y_rotation(0.8 * glfw.get_time())
-            rotation = pyrr.matrix44.multiply(rot_x, rot_y)
+            rot_x = pyrr.Matrix44.from_x_rotation(glfw.get_time())
 
             # draw a mesh object
-            model = pyrr.matrix44.multiply(rotation, self.robot_body_position)
+            model = pyrr.matrix44.multiply(rot_x, self.robot_body_position)
             model = pyrr.matrix44.multiply(self.robot_body_scale, model)
             glUniformMatrix4fv(self.model_location, 1, GL_FALSE, model)
             glBindVertexArray(self.robot_body.vao)  # bind the VAO that is being drawn

@@ -1,4 +1,5 @@
 import pyrr
+import mesh_loader as ml
 
 
 class Link:
@@ -8,11 +9,13 @@ class Link:
         self.name = name
         self.connected_joints = []
         self.is_base_link = False
-        self.xyz = xyz
-        self.rpy = rpy
-        self.color = color
+        self.xyz = [float(x) for x in xyz.split(" ")]
+        self.rpy = [float(x) for x in rpy.split(" ")]
+        self.color = [float(x) for x in color.split(" ")]
         self.position = None
         self.scale = None
+        self.rotation = None
+        self.mesh = None
 
     def describe(self):
         print(f"This is link {self.name}")
@@ -27,7 +30,16 @@ class Box(Link):
         self.width = width
         self.height = height
         self.shape = "box"
+        self.position = pyrr.Vector3([self.xyz[0], self.xyz[1], self.xyz[2]])
+        self.rotation_x = pyrr.matrix44.create_from_x_rotation(self.rpy[0])
+        self.rotation_y = pyrr.matrix44.create_from_y_rotation(self.rpy[1])
+        self.rotation_z = pyrr.matrix44.create_from_z_rotation(self.rpy[2])
+        self.rotation = pyrr.matrix44.multiply(
+            pyrr.matrix44.multiply(self.rotation_x, self.rotation_y),
+            self.rotation_z
+        )
         self.scale = pyrr.matrix44.create_from_scale(pyrr.Vector3([length, height, width]))
+        self.mesh = ml.MeshLoader("models/cube.obj", self.color)
 
     def describe(self):
         print(f"Link Box (name, radius, dimensions LWH, shape, xyz, rpy, color):\n{self.name}, {self.length} {self.width} "
@@ -42,7 +54,16 @@ class Cylinder(Link):
         self.radius = radius
         self.length = length
         self.shape = "cylinder"
-        self.scale = pyrr.matrix44.create_from_scale(pyrr.Vector3([2*radius, length, 2*radius]))
+        self.position = pyrr.Vector3([self.xyz[0], self.xyz[1], self.xyz[2]])
+        self.rotation_x = pyrr.matrix44.create_from_x_rotation(self.rpy[0])
+        self.rotation_y = pyrr.matrix44.create_from_y_rotation(self.rpy[1])
+        self.rotation_z = pyrr.matrix44.create_from_z_rotation(self.rpy[2])
+        self.rotation = pyrr.matrix44.multiply(
+            pyrr.matrix44.multiply(self.rotation_x, self.rotation_y),
+            self.rotation_z
+        )
+        self.scale = pyrr.matrix44.create_from_scale(pyrr.Vector3([2 * self.radius, self.length, 2 * self.radius]))
+        self.mesh = ml.MeshLoader("models/cylinder.obj", self.color)
 
     def describe(self):
         print(f"Link Cylinder (name, radius, length, shape, xyz, rpy,color):\n{self.name}, {self.radius}, {self.length}, "
@@ -56,7 +77,16 @@ class Sphere(Link):
         super().__init__(name, xyz, rpy, color)
         self.radius = radius
         self.shape = "sphere"
-        self.scale = pyrr.matrix44.create_from_scale(pyrr.Vector3([2*radius, 2*radius, 2*radius]))
+        self.position = pyrr.Vector3([self.xyz[0], self.xyz[1], self.xyz[2]])
+        self.rotation_x = pyrr.matrix44.create_from_x_rotation(self.rpy[0])
+        self.rotation_y = pyrr.matrix44.create_from_y_rotation(self.rpy[1])
+        self.rotation_z = pyrr.matrix44.create_from_z_rotation(self.rpy[2])
+        self.rotation = pyrr.matrix44.multiply(
+            pyrr.matrix44.multiply(self.rotation_x, self.rotation_y),
+            self.rotation_z
+        )
+        self.scale = pyrr.matrix44.create_from_scale(pyrr.Vector3([2 * self.radius, 2 * self.radius, 2 * self.radius]))
+        self.mesh = ml.MeshLoader("models/sphere.obj", self.color)
 
     def describe(self):
         print(f"Link Sphere (name, radius, shape, xyz, rpy, color):\n{self.name}, {self.radius}, "

@@ -47,8 +47,6 @@ class Robot:
             if child.tag == "material":
                 name = child.attrib["name"]
                 value = child[0].attrib["rgba"]
-                value = value.split(" ")
-                value = [float(x) for x in value]
                 materials[name] = value
 
         return urdf_links, urdf_joints, materials

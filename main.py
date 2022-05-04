@@ -4,10 +4,8 @@
 # source /opt/ros/noetic/setup.bash
 # /usr/bin/python3 main.py
 
-from src import robot
-from gui import window
+import window
 
 if __name__ == '__main__':
-    Robot2 = robot.Robot("nas_robot_latest.xacro")
-    Robot2.describe()
-    app = window.App(Robot2)
+    app = window.App("nas_robot_latest.xacro")
+    app.robot.describe()

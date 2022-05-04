@@ -61,7 +61,7 @@
   <link name='telo'>
     <!--pose>0 0 0.1 0 0 0</pose-->
     <visual name='telo_visual'>
-      <origin xyz="0 0 0" rpy=" 0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <box size="${dlzka} ${sirka} ${vyska}"/>
       </geometry>
@@ -74,7 +74,7 @@
     </collision>
     <inertial>
       <mass value="10.0"/>
-      <origin xyz="0.0 0 0.1" rpy=" 0 0 0"/>
+      <origin xyz="0.0 0 0.1" rpy="0 0 0"/>
       <inertia
               ixx="0.5" ixy="0" ixz="0"
               iyy="1.0" iyz="0"
@@ -86,14 +86,14 @@
 
   <link name="vsesmerove_koleso">
     <visual name='vsesmerove_visual'>
-      <origin xyz="-0.15 0 -0.05" rpy=" 0 0 0"/>
+      <origin xyz="-0.15 0 -0.05" rpy="0 0 0"/>
       <geometry>
         <sphere radius="0.05"/>
       </geometry>
       <material name="blue"/>
     </visual>
     <collision name='vsesmerove_collision'>
-      <origin xyz="-0.15 0 -0.05" rpy=" 0 0 0"/>
+      <origin xyz="-0.15 0 -0.05" rpy="0 0 0"/>
       <geometry>
         <sphere radius="0.05"/>
       </geometry>
