@@ -10,13 +10,11 @@ class Joint:
         self.child = child
         self.xyz = [float(x) for x in xyz.split(" ")]
         self.rpy = [float(x) for x in rpy.split(" ")]
-        self.position = pyrr.Vector3([self.xyz[0], self.xyz[1], self.xyz[2]])
-        self.rotation_x = pyrr.matrix44.create_from_x_rotation(self.rpy[0])
-        self.rotation_y = pyrr.matrix44.create_from_y_rotation(self.rpy[1])
-        self.rotation_z = pyrr.matrix44.create_from_z_rotation(self.rpy[2])
-        self.rotation = pyrr.matrix44.multiply(
-            pyrr.matrix44.multiply(self.rotation_x, self.rotation_y),
-            self.rotation_z
+        self.position = pyrr.matrix44.create_from_translation(
+            pyrr.Vector3([self.xyz[0], self.xyz[2], self.xyz[1]])
+        )  # Y and Z axis are swapped
+        self.rotation = pyrr.matrix44.create_from_eulers(
+            eulers=[self.rpy[1], self.rpy[0], self.rpy[2]]
         )
 
     def describe(self):

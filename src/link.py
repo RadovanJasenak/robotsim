@@ -30,13 +30,14 @@ class Box(Link):
         self.width = width
         self.height = height
         self.shape = "box"
-        self.position = pyrr.Vector3([self.xyz[0], self.xyz[1], self.xyz[2]])
-        self.rotation_x = pyrr.matrix44.create_from_x_rotation(self.rpy[0])
-        self.rotation_y = pyrr.matrix44.create_from_y_rotation(self.rpy[1])
-        self.rotation_z = pyrr.matrix44.create_from_z_rotation(self.rpy[2])
-        self.rotation = pyrr.matrix44.multiply(
-            pyrr.matrix44.multiply(self.rotation_x, self.rotation_y),
-            self.rotation_z
+        self.position = pyrr.matrix44.create_from_translation(
+            pyrr.Vector3([self.xyz[0], self.xyz[2], self.xyz[1]])
+        )  # Y and Z axis are swapped
+        # X - pitch
+        # Y - roll
+        # Z - yaw
+        self.rotation = pyrr.matrix44.create_from_eulers(
+            eulers=[self.rpy[1], self.rpy[0], self.rpy[2]]
         )
         self.scale = pyrr.matrix44.create_from_scale(pyrr.Vector3([length, height, width]))
         self.mesh = ml.MeshLoader("models/cube.obj", self.color)
@@ -54,13 +55,14 @@ class Cylinder(Link):
         self.radius = radius
         self.length = length
         self.shape = "cylinder"
-        self.position = pyrr.Vector3([self.xyz[0], self.xyz[1], self.xyz[2]])
-        self.rotation_x = pyrr.matrix44.create_from_x_rotation(self.rpy[0])
-        self.rotation_y = pyrr.matrix44.create_from_y_rotation(self.rpy[1])
-        self.rotation_z = pyrr.matrix44.create_from_z_rotation(self.rpy[2])
-        self.rotation = pyrr.matrix44.multiply(
-            pyrr.matrix44.multiply(self.rotation_x, self.rotation_y),
-            self.rotation_z
+        self.position = pyrr.matrix44.create_from_translation(
+            pyrr.Vector3([self.xyz[0], self.xyz[2], self.xyz[1]])
+        )  # Y and Z axis are swapped
+        # X - pitch
+        # Y - roll
+        # Z - yaw
+        self.rotation = pyrr.matrix44.create_from_eulers(
+            eulers=[self.rpy[1], self.rpy[0], self.rpy[2]]
         )
         self.scale = pyrr.matrix44.create_from_scale(pyrr.Vector3([2 * self.radius, self.length, 2 * self.radius]))
         self.mesh = ml.MeshLoader("models/cylinder.obj", self.color)
@@ -77,13 +79,14 @@ class Sphere(Link):
         super().__init__(name, xyz, rpy, color)
         self.radius = radius
         self.shape = "sphere"
-        self.position = pyrr.Vector3([self.xyz[0], self.xyz[1], self.xyz[2]])
-        self.rotation_x = pyrr.matrix44.create_from_x_rotation(self.rpy[0])
-        self.rotation_y = pyrr.matrix44.create_from_y_rotation(self.rpy[1])
-        self.rotation_z = pyrr.matrix44.create_from_z_rotation(self.rpy[2])
-        self.rotation = pyrr.matrix44.multiply(
-            pyrr.matrix44.multiply(self.rotation_x, self.rotation_y),
-            self.rotation_z
+        self.position = pyrr.matrix44.create_from_translation(
+            pyrr.Vector3([self.xyz[0], self.xyz[2], self.xyz[1]])
+        )  # Y and Z axis are swapped
+        # X - pitch
+        # Y - roll
+        # Z - yaw
+        self.rotation = pyrr.matrix44.create_from_eulers(
+            eulers=[self.rpy[1], self.rpy[0], self.rpy[2]]
         )
         self.scale = pyrr.matrix44.create_from_scale(pyrr.Vector3([2 * self.radius, 2 * self.radius, 2 * self.radius]))
         self.mesh = ml.MeshLoader("models/sphere.obj", self.color)

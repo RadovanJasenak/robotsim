@@ -8,7 +8,7 @@ import pyrr
 
 class App:
     # creating and checking glfw window
-    def __init__(self, robotFilepath):
+    def __init__(self, urdfFilepath):
 
         if not glfw.init():
             raise Exception("glfw can not be initialized")
@@ -34,15 +34,11 @@ class App:
             near=0.1, far=100.0)
 
         # view matrix, eye - position of camera cannot be [0, 0, 0], target i am looking at , up vector of the camera
-        camera_position = pyrr.Vector3([0, 1, 4])
+        camera_position = pyrr.Vector3([0, 1, 1])
         self.look_at = pyrr.matrix44.create_look_at(
             camera_position,
-            pyrr.Vector3([0, 1, 0]),
+            pyrr.Vector3([0, 0, 0]),
             pyrr.Vector3([0, 1, 0]))
-
-        # translate (move) the object in world space
-        self.ground_position = pyrr.matrix44.create_from_translation(pyrr.Vector3([0, 0, 0]))
-        self.robot_body_position = pyrr.matrix44.create_from_translation(pyrr.Vector3([0, 1, 0]))
 
         # get the uniform's location from shader
         self.projection_location = glGetUniformLocation(self.shader, "projection")
@@ -53,18 +49,12 @@ class App:
         glUniformMatrix4fv(self.projection_location, 1, GL_FALSE, self.projection)
         glUniformMatrix4fv(self.view_location, 1, GL_FALSE, self.look_at)
 
-        self.robot = Robot(robotFilepath)
-        self.robot_body = ml.MeshLoader("models/cube.obj", self.robot.base_link.color)
-        self.robot_body_scale = pyrr.matrix44.create_from_scale(
-            pyrr.Vector3([self.robot.base_link.length,
-                          self.robot.base_link.height,
-                          self.robot.base_link.width])
-        )
         self.scene = Scene()
-        self.light = Light([0., 3., 1.], [1., 1., 1.])
-        glUniform3fv(glGetUniformLocation(self.shader, "lightColor"), 1, self.light.color)
-        glUniform3fv(glGetUniformLocation(self.shader, "lightPos"), 1, self.light.position)
+        glUniform3fv(glGetUniformLocation(self.shader, "lightColor"), 1, self.scene.light.color)
+        glUniform3fv(glGetUniformLocation(self.shader, "lightPos"), 1, self.scene.light.position)
         glUniform3fv(glGetUniformLocation(self.shader, "viewPos"), 1, self.look_at[0])
+
+        self.robot = Robot(urdfFilepath)
 
         self.main_loop()
 
@@ -75,23 +65,38 @@ class App:
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  # refresh screen
             glUseProgram(self.shader)  # here to make sure the correct one is being used
 
-            rot_x = pyrr.Matrix44.from_x_rotation(glfw.get_time())
-
-            # draw a mesh object
-            model = pyrr.matrix44.multiply(rot_x, self.robot_body_position)
-            model = pyrr.matrix44.multiply(self.robot_body_scale, model)
-            glUniformMatrix4fv(self.model_location, 1, GL_FALSE, model)
-            glBindVertexArray(self.robot_body.vao)  # bind the VAO that is being drawn
-            glDrawArrays(GL_TRIANGLES, 0, self.robot_body.vertex_count)
+            # draw a robot
+            # model = pyrr.matrix44.multiply(self.robot.base_link.rotation, self.robot.base_link.position)
+            # model = pyrr.matrix44.multiply(self.robot.base_link.scale, model)
+            # glUniformMatrix4fv(self.model_location, 1, GL_FALSE, model)
+            # glBindVertexArray(self.robot.base_link.mesh.vao)  # bind the VAO that is being drawn
+            # glDrawArrays(GL_TRIANGLES, 0, self.robot.base_link.mesh.vertex_count)
+            self.draw_robot(self.robot)
 
             # scene floor plane model
-            model = pyrr.matrix44.multiply(self.scene.ground_scale, self.ground_position)
-            glUniformMatrix4fv(self.model_location, 1, GL_FALSE, model)
+            glUniformMatrix4fv(self.model_location, 1, GL_FALSE, self.scene.ground_model)
             glBindVertexArray(self.scene.ground.vao)  # bind the VAO that is being drawn
             glDrawArrays(GL_TRIANGLES, 0, self.scene.ground.vertex_count)
 
             glfw.swap_buffers(self.window)  # swap buffers - double buffering
         self.quit()
+
+    def draw_robot(self, robot: Robot):
+        model = pyrr.matrix44.multiply(self.robot.base_link.rotation, self.robot.base_link.position)
+        model = pyrr.matrix44.multiply(self.robot.base_link.scale, model)
+        glUniformMatrix4fv(self.model_location, 1, GL_FALSE, model)
+        glBindVertexArray(self.robot.base_link.mesh.vao)  # bind the VAO that is being drawn
+        glDrawArrays(GL_TRIANGLES, 0, self.robot.base_link.mesh.vertex_count)
+
+        for link in robot.links:
+            for joint in robot.joints:
+                if link.name == joint.child.name:
+                    model = pyrr.matrix44.multiply(link.rotation, joint.position)
+                    print(joint.position)
+                    model = pyrr.matrix44.multiply(link.scale, model)
+                    glUniformMatrix4fv(self.model_location, 1, GL_FALSE, model)
+                    glBindVertexArray(link.mesh.vao)  # bind the VAO that is being drawn
+                    glDrawArrays(GL_TRIANGLES, 0, link.mesh.vertex_count)
 
     def create_shader(self, vertexFilepath, fragmentFilepath):
         # load shaders from files and compile them to be used as a program
@@ -109,8 +114,9 @@ class App:
     def quit(self):
         # free allocated space before exiting
         glDeleteProgram(self.shader)
-        self.robot_body.destroy()
-        self.scene.ground.destroy()
+        for link in self.robot.links:
+            link.mesh.destroy()
+        self.scene.destroy()
         glfw.terminate()
 
     def window_resize(self, window, width, height):
@@ -126,25 +132,13 @@ class Scene:
     def __init__(self):
         self.ground = ml.MeshLoader("models/plane.obj", [0.412, 0.412, 0.412, 1.0])
         self.ground_scale = pyrr.matrix44.create_from_scale(pyrr.Vector3([10.0, 10.0, 10.0]))
-        self.robot = None
+        self.ground_position = pyrr.matrix44.create_from_translation(pyrr.Vector3([0, 0, 0]))
+        self.ground_model = pyrr.matrix44.multiply(self.ground_scale, self.ground_position)
 
+        self.light = Light([0., 3., 1.], [1., 1., 1.])
 
-# class RobotVisual:
-#     def __init__(self, robot: Robot):
-#         self.meshes = []
-#         for item in robot.links:
-#             if item.shape == "box":
-#                 self.meshes.append(Mesh("models/cube.obj"))
-#             elif item.shape == "cylinder":
-#                 self.meshes.append(Mesh("models/cylinder.obj"))
-#             elif item.shape == "sphere":
-#                 self.meshes.append(Mesh("models/sphere.obj"))
-#             else:
-#                 raise ValueError("Attempting to draw an object that is not a box, a cylinder or a sphere")
-#
-#     def create_model(self):
-#         # connect the meshes of links with regard to joints
-#         pass
+    def destroy(self):
+        self.ground.destroy()
 
 
 class Light:

@@ -7,5 +7,5 @@
 import window
 
 if __name__ == '__main__':
-    app = window.App("nas_robot_latest.xacro")
+    app = window.App("my2wr.xacro")
     app.robot.describe()
