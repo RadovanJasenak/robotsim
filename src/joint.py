@@ -20,3 +20,9 @@ class Joint:
     def describe(self):
         print(f"Joint(name, type, parent, child, xyz, rpy):\n{self.name}, {self.joint_type}, {self.parent.name}, "
               f"{self.child.name}, {self.xyz}, {self.rpy}\n")
+
+    def __str__(self):
+        return "JOINT '" + self.name + "'"
+
+    def __repr__(self):
+        return self.__str__()

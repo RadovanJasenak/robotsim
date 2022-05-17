@@ -34,7 +34,7 @@ class App:
             near=0.1, far=100.0)
 
         # view matrix, eye - position of camera cannot be [0, 0, 0], target i am looking at , up vector of the camera
-        camera_position = pyrr.Vector3([0, 1, 1])
+        camera_position = pyrr.Vector3([0, 2, 3])
         self.look_at = pyrr.matrix44.create_look_at(
             camera_position,
             pyrr.Vector3([0, 0, 0]),
@@ -65,13 +65,8 @@ class App:
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  # refresh screen
             glUseProgram(self.shader)  # here to make sure the correct one is being used
 
-            # draw a robot
-            # model = pyrr.matrix44.multiply(self.robot.base_link.rotation, self.robot.base_link.position)
-            # model = pyrr.matrix44.multiply(self.robot.base_link.scale, model)
-            # glUniformMatrix4fv(self.model_location, 1, GL_FALSE, model)
-            # glBindVertexArray(self.robot.base_link.mesh.vao)  # bind the VAO that is being drawn
-            # glDrawArrays(GL_TRIANGLES, 0, self.robot.base_link.mesh.vertex_count)
-            self.draw_robot(self.robot)
+            # draw robot
+            self.robot.base_link.draw(self.model_location, pyrr.matrix44.create_identity())
 
             # scene floor plane model
             glUniformMatrix4fv(self.model_location, 1, GL_FALSE, self.scene.ground_model)
@@ -80,23 +75,6 @@ class App:
 
             glfw.swap_buffers(self.window)  # swap buffers - double buffering
         self.quit()
-
-    def draw_robot(self, robot: Robot):
-        model = pyrr.matrix44.multiply(self.robot.base_link.rotation, self.robot.base_link.position)
-        model = pyrr.matrix44.multiply(self.robot.base_link.scale, model)
-        glUniformMatrix4fv(self.model_location, 1, GL_FALSE, model)
-        glBindVertexArray(self.robot.base_link.mesh.vao)  # bind the VAO that is being drawn
-        glDrawArrays(GL_TRIANGLES, 0, self.robot.base_link.mesh.vertex_count)
-
-        for link in robot.links:
-            for joint in robot.joints:
-                if link.name == joint.child.name:
-                    model = pyrr.matrix44.multiply(link.rotation, joint.position)
-                    print(joint.position)
-                    model = pyrr.matrix44.multiply(link.scale, model)
-                    glUniformMatrix4fv(self.model_location, 1, GL_FALSE, model)
-                    glBindVertexArray(link.mesh.vao)  # bind the VAO that is being drawn
-                    glDrawArrays(GL_TRIANGLES, 0, link.mesh.vertex_count)
 
     def create_shader(self, vertexFilepath, fragmentFilepath):
         # load shaders from files and compile them to be used as a program
