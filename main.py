@@ -4,8 +4,12 @@
 # source /opt/ros/noetic/setup.bash
 # /usr/bin/python3 main.py
 
-import window
+from windowQt import Window
+from PyQt6.QtWidgets import QApplication
+import sys
 
 if __name__ == '__main__':
-    app = window.App("nas_robot_latest.xacro")
-    app.robot.describe()
+    app = QApplication(sys.argv)
+    window = Window()
+    window.showMaximized()
+    app.exec()

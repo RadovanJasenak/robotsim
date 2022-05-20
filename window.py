@@ -2,7 +2,7 @@ import glfw
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileShader, compileProgram
 import mesh_loader as ml
-from src.robot import Robot
+from robot import Robot
 import pyrr
 
 
@@ -34,7 +34,7 @@ class App:
             near=0.1, far=100.0)
 
         # view matrix, eye - position of camera cannot be [0, 0, 0], target i am looking at , up vector of the camera
-        camera_position = pyrr.Vector3([0, 2, 3])
+        camera_position = pyrr.Vector3([0, 0.001, 1])
         self.look_at = pyrr.matrix44.create_look_at(
             camera_position,
             pyrr.Vector3([0, 0, 0]),
@@ -101,7 +101,7 @@ class App:
         # window resizing function
         glViewport(0, 0, width, height)
         projection_on_resize = pyrr.matrix44.create_perspective_projection(
-            fovy=45.0, aspect=width/height,
+            fovy=45.0, aspect=width / height,
             near=0.1, far=100.0)
         glUniformMatrix4fv(self.projection_location, 1, GL_FALSE, projection_on_resize)
 

@@ -25,6 +25,9 @@ class Link:
         )
         self.mesh = None
 
+    def load_mesh(self):
+        pass
+
     def describe(self):
         print(f"This is link {self.name}")
 
@@ -67,10 +70,12 @@ class Box(Link):
         self.height = height
         self.shape = "box"
         self.scale = pyrr.matrix44.create_from_scale(pyrr.Vector3([length, height, width]))
+
+    def load_mesh(self):
         self.mesh = ml.MeshLoader("models/cube.obj", self.color)
 
     def describe(self):
-        print(f"Link Box (name, radius, dimensions LWH, shape, xyz, rpy, color):\n{self.name}, {self.length} {self.width} "
+        print(f"Link Box (name, dimensions LWH, shape, xyz, rpy, color):\n{self.name}, {self.length} {self.width} "
               f"{self.height}, {self.shape}, {self.xyz}, {self.rpy}, {self.color}\n")
 
     def get_scale(self):
@@ -88,6 +93,8 @@ class Cylinder(Link):
         self.length = length
         self.shape = "cylinder"
         self.scale = pyrr.matrix44.create_from_scale(pyrr.Vector3([2 * self.radius, self.length, 2 * self.radius]))
+
+    def load_mesh(self):
         self.mesh = ml.MeshLoader("models/cylinder.obj", self.color)
 
     def describe(self):
@@ -108,6 +115,8 @@ class Sphere(Link):
         self.radius = radius
         self.shape = "sphere"
         self.scale = pyrr.matrix44.create_from_scale(pyrr.Vector3([2 * self.radius, 2 * self.radius, 2 * self.radius]))
+
+    def load_mesh(self):
         self.mesh = ml.MeshLoader("models/sphere.obj", self.color)
 
     def describe(self):

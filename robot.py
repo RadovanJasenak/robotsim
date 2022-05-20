@@ -1,8 +1,7 @@
-from src import error
 import subprocess
 import xml.etree.ElementTree as Et
-from src.link import *
-from src.joint import *
+from link import *
+from joint import *
 
 
 class Robot:
@@ -14,6 +13,11 @@ class Robot:
         # create base_link attribute and pop the object from links List, base link is box link
         self.base_link = self.find_base_link(self.links, self.joints)
         self.connect_joints_links(self.links, self.joints)
+        self.number_of_wheels = 0
+        for j in self.joints:
+            if j.joint_type == "continuous":
+                self.number_of_wheels += 1
+        print("*** robot vytvoreny *** ")
 
     def describe(self):
         print(f"Base link (name, dimensions LWH, xyz, rpy, color):\n{self.base_link.name}, {self.base_link.length} "
@@ -122,8 +126,6 @@ class Robot:
                 link.is_base_link = True
                 base_link = link
 
-        if base_link.shape != 'box':
-            raise error.URDFerror
         return base_link
 
     def connect_joints_links(self, links, joints):
