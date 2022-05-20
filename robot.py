@@ -14,10 +14,18 @@ class Robot:
         self.base_link = self.find_base_link(self.links, self.joints)
         self.connect_joints_links(self.links, self.joints)
         self.number_of_wheels = 0
+        self.wheels = []  # joints
         for j in self.joints:
             if j.joint_type == "continuous":
                 self.number_of_wheels += 1
+                self.wheels.append(j)
+        self.theta = 0
         print("*** robot vytvoreny *** ")
+
+    def update(self, pry, speeds):
+        for i, wheel in enumerate(self.wheels):
+            wheel.update(pry[i], speeds[i])
+
 
     def describe(self):
         print(f"Base link (name, dimensions LWH, xyz, rpy, color):\n{self.base_link.name}, {self.base_link.length} "

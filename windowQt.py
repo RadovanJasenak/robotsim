@@ -5,8 +5,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from PyQt6.QtOpenGL import QOpenGLVersionProfile
 from PyQt6.QtGui import QSurfaceFormat
-import sys
 
+import sys
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
 
@@ -21,38 +21,54 @@ class Window(QMainWindow):
 
         super().__init__()
 
+        try:
+            if sys.argv[1] is not None:
+                filepath = str(sys.argv[1])
+                if ".xacro" in filepath:
+                    self.robot = Robot(sys.argv[1])
+                elif ".urdf" in filepath:
+                    self.robot = Robot(sys.argv[1])
+                else:
+                    self.robot = None
+                    raise ValueError
+
+        except ValueError:
+            sys.exit("URDF or XACRO file expected")
+
         self.setWindowTitle("RobotSim")
 
         # widgets
-        self.ogl_widget = OpenGLWidget()
-        wheels = self.ogl_widget.robot.number_of_wheels
+        self.ogl_widget = OpenGLWidget(self.robot)
+        wheel_num = self.robot.number_of_wheels
 
         spd_labels = []
-        spd_input_fields = []
+        self.spd_input_fields = []
         rot_labels = []
-        rot_input_fields = []
+        self.rot_input_fields = []
+        pry_labels = [QLabel("Pitch"), QLabel("Roll"), QLabel("Yaw")]
 
-        for wheel in range(0, wheels):
-            spd_labels.append(QLabel(f"joint rotation speed: {wheel}"))
-            spd_input_fields.append(QLineEdit())
-            rot_labels.append(QLabel(f"joint rotation PRY: {wheel}"))
+        for i in range(0, wheel_num):
+            spd_labels.append(QLabel(f"{self.robot.wheels[i].name} "))
+            self.spd_input_fields.append(QLineEdit())
+            rot_labels.append(QLabel(f" {self.robot.wheels[i].name}"))
             input_fields = []
             for x in range(0, 3):
                 input_fields.append(QLineEdit())
                 if x == 0:
-                    input_fields[x].setPlaceholderText("P")
+                    input_fields[x].setPlaceholderText("Pitch")
                 if x == 1:
-                    input_fields[x].setPlaceholderText("R")
+                    input_fields[x].setPlaceholderText("Roll")
                 if x == 2:
-                    input_fields[x].setPlaceholderText("Y")
-            rot_input_fields.append(input_fields)
-
+                    input_fields[x].setPlaceholderText("Yaw")
+            self.rot_input_fields.append(input_fields)
+        spd_label = QLabel("Speed")
+        rot_label = QLabel("Rotation")
         self.pos_label = QLabel("Position: x = 2345 y = 354 y = 234 t = 235")
         apply_button = QPushButton("Apply Changes")
         apply_button.clicked.connect(self.apply_button_func)
 
         sidebar_container = QWidget()
-        sidebar_container.setMaximumWidth(250)
+        sidebar_container.setMaximumWidth(300)
 
         main_container = QWidget()
 
@@ -63,14 +79,15 @@ class Window(QMainWindow):
         main_row = QHBoxLayout()
 
         # place widgets in layouts
-        for x in range(0, wheels):
-            form_layout.addRow(spd_labels[x], spd_input_fields[x])
-
+        form_layout.addWidget(spd_label)
+        for x in range(0, wheel_num):
+            form_layout.addRow(spd_labels[x], self.spd_input_fields[x])
+        form_layout.addWidget(rot_label)
         for x in range(0, len(rot_labels)):
             rot_column_layout.addWidget(rot_labels[x])
-            rot_column_layout.addWidget(rot_input_fields[x][0])
-            rot_column_layout.addWidget(rot_input_fields[x][1])
-            rot_column_layout.addWidget(rot_input_fields[x][2])
+            rot_column_layout.addWidget(self.rot_input_fields[x][0])
+            rot_column_layout.addWidget(self.rot_input_fields[x][1])
+            rot_column_layout.addWidget(self.rot_input_fields[x][2])
         form_layout.addRow(rot_column_layout)
 
         column_layout.addWidget(self.pos_label)
@@ -88,26 +105,48 @@ class Window(QMainWindow):
         self.setCentralWidget(main_container)
 
     def apply_button_func(self):
-        text = "ayaya"
-        self.pos_label.setText(text)
+        speeds = []
+        pry = []
+        for field in self.spd_input_fields:
+            inp = field.text()
+            if inp == "":
+                speeds.append(0)
+                continue
+            if float(inp):
+                speeds.append(float(inp))
+                continue
+            else:
+                speeds.append(0)
+
+        for i, fields in enumerate(self.rot_input_fields):
+            temp = [] * 3
+            for j, field in enumerate(fields):
+                inp = field.text()
+                if inp == "":
+                    temp.append(0)
+                    continue
+                if float(inp):
+                    temp.append(float(inp))
+                    continue
+                else:
+                    temp.append(0)
+            pry.append(temp)
+        print(speeds)
+        print(pry)
+
+        self.robot.update(pry, speeds)
+        self.ogl_widget.update()
+        self.pos_label.setText(f"Position: "
+                               f"x={self.robot.base_link.xyz[0]} "
+                               f"y={self.robot.base_link.xyz[1]} "
+                               f"z={self.robot.base_link.xyz[2]} "
+                               f"θ={self.robot.theta}")
 
 
 class OpenGLWidget(QOpenGLWidget):
-    def __init__(self):
+    def __init__(self, robot: Robot):
         super().__init__()
-        try:
-            if sys.argv[1] is not None:
-                filepath = str(sys.argv[1])
-                if ".xacro" in filepath:
-                    self.robot = Robot(sys.argv[1])
-                elif ".urdf" in filepath:
-                    self.robot = Robot(sys.argv[1])
-                else:
-                    self.robot = None
-                    raise ValueError
-
-        except ValueError:
-            sys.exit("URDF or XACRO file expected")
+        self.robot = robot
 
     def initializeGL(self):
         # set OpenGL version and profile
@@ -165,6 +204,7 @@ class OpenGLWidget(QOpenGLWidget):
         return shader
 
     def paintGL(self):
+        print("painting...")
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  # refresh screen
         glUseProgram(self.shader)  # here to make sure the correct one is being used
 

@@ -16,6 +16,13 @@ class Joint:
         self.rotation = pyrr.matrix44.create_from_eulers(
             eulers=[self.rpy[1], self.rpy[0], self.rpy[2]]
         )
+        self.speed = 0
+
+    def update(self, pry, speed):
+        self.rotation = pyrr.matrix44.create_from_eulers(
+            eulers=[pry[0], pry[1], pry[2]]
+        )
+        self.speed = speed
 
     def describe(self):
         print(f"Joint(name, type, parent, child, xyz, rpy):\n{self.name}, {self.joint_type}, {self.parent.name}, "
