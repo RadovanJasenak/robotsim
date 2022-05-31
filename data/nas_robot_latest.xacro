@@ -5,8 +5,8 @@
   <xacro:property name="dlzka" value="0.4"/>
   <xacro:property name="sirka" value="0.2"/>
   <xacro:property name="vyska" value="0.1"/>
-  <xacro:property name="rkolesa" value="0.2"/>
-  <xacro:property name="hkolesa" value="0.1"/>
+  <xacro:property name="rkolesa" value="0.1"/>
+  <xacro:property name="hkolesa" value="0.05"/>
 
   <material name="black">
     <color rgba="0.0 0.0 0.0 1.0"/>
@@ -86,7 +86,7 @@
 
   <link name="vsesmerove_koleso">
     <visual name='vsesmerove_visual'>
-      <origin xyz="-0.15 0 -0.1" rpy="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <sphere radius="0.05"/>
       </geometry>
@@ -113,7 +113,7 @@
 
 
   <joint name="vsesmerove_koleso_upevnenie" type="fixed">
-    <origin xyz="-0.1 0 0.05" rpy="0 0 0"/>
+    <origin xyz="-0.15 0 -0.05" rpy="0 0 0"/>
     <parent link="telo"/>
     <child link="vsesmerove_koleso"/>
   </joint>
@@ -125,14 +125,14 @@
       <visual name="${prefix}_koleso_visual">
         <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
         <geometry>
-          <cylinder radius="0.1" length="0.05"/>
+          <cylinder radius="${rkolesa}" length="${hkolesa}"/>
         </geometry>
         <material name="red"/>
       </visual>
       <collision name="${prefix}_koleso_collision">
         <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
         <geometry>
-          <cylinder radius="0.1" length="0.05"/>
+          <cylinder radius="${rkolesa}" length="${hkolesa}"/>
         </geometry>
       </collision>
       <inertial>
@@ -159,7 +159,7 @@
 -->
 
     <joint type="continuous" name="${prefix}_koleso_zaves">
-      <origin xyz="0.1 ${reflect*0.15} 0" rpy="0 0 0"/>
+      <origin xyz="0.1 ${reflect*0.125} 0" rpy="0 0 0"/>
       <child link="${prefix}_koleso"/>
       <parent link="telo"/>
       <axis xyz="0 1 0" rpy="0 0 0"/>

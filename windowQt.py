@@ -40,6 +40,7 @@ class Window(QMainWindow):
         # widgets
         self.ogl_widget = OpenGLWidget(self.robot)
         wheel_num = self.robot.number_of_wheels
+        #self.robot.describe()
 
         spd_labels = []
         self.spd_input_fields = []
@@ -63,7 +64,10 @@ class Window(QMainWindow):
             self.rot_input_fields.append(input_fields)
         spd_label = QLabel("Speed")
         rot_label = QLabel("Rotation")
-        self.pos_label = QLabel("Position: x = 2345 y = 354 y = 234 t = 235")
+        self.pos_label = QLabel(f"Position: x={round(self.robot.base_link.xyz[0], 2)} "
+                                f"y={round(self.robot.base_link.xyz[1], 2)} "
+                                f"z={round(self.robot.base_link.xyz[2], 2)} "
+                                f"θ={round(self.robot.theta, 2)}")
         apply_button = QPushButton("Apply Changes")
         apply_button.clicked.connect(self.apply_button_func)
 
@@ -131,16 +135,14 @@ class Window(QMainWindow):
                 else:
                     temp.append(0)
             pry.append(temp)
-        print(speeds)
-        print(pry)
 
-        self.robot.update(pry, speeds)
+        self.robot.update_values(pry, speeds)
+        self.robot.move()
         self.ogl_widget.update()
-        self.pos_label.setText(f"Position: "
-                               f"x={self.robot.base_link.xyz[0]} "
-                               f"y={self.robot.base_link.xyz[1]} "
-                               f"z={self.robot.base_link.xyz[2]} "
-                               f"θ={self.robot.theta}")
+        self.pos_label.setText(f"Position: x={round(self.robot.base_link.xyz[0], 2)} "
+                               f"y={round(self.robot.base_link.xyz[1], 2)} "
+                               f"z={round(self.robot.base_link.xyz[2], 2)} "
+                               f"θ={round(self.robot.theta, 2)}")
 
 
 class OpenGLWidget(QOpenGLWidget):
@@ -167,7 +169,7 @@ class OpenGLWidget(QOpenGLWidget):
             near=0.1, far=100.0)
 
         # view matrix, eye - position of camera cannot be [0, 0, 0], target i am looking at , up vector of the camera
-        camera_position = pyrr.Vector3([0, 1, 1])
+        camera_position = pyrr.Vector3([0, 1.5, 3])
         self.look_at = pyrr.matrix44.create_look_at(
             camera_position,
             pyrr.Vector3([0, 0, 0]),

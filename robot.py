@@ -2,6 +2,9 @@ import subprocess
 import xml.etree.ElementTree as Et
 from link import *
 from joint import *
+import numpy as np
+import math
+from operator import add
 
 
 class Robot:
@@ -19,13 +22,60 @@ class Robot:
             if j.joint_type == "continuous":
                 self.number_of_wheels += 1
                 self.wheels.append(j)
-        self.theta = 0
+        self.theta = 0.0
         print("*** robot vytvoreny *** ")
 
-    def update(self, pry, speeds):
+    def move(self):
+        # for differential drive robots only ( 2 wheels)
+        # TODO: P is not centre of robot
+        if self.number_of_wheels != 2:
+            return
+        wheel1 = self.wheels[0]
+        wheel2 = self.wheels[1]
+
+        # calculate distance between wheels
+        l1 = list(map(add, self.base_link.xyz, wheel1.xyz))
+        l2 = list(map(add, self.base_link.xyz, wheel2.xyz))
+
+        dbw = math.sqrt(math.pow(l2[0] - l1[0], 2) +
+                        math.pow(l2[1] - l1[1], 2) +
+                        math.pow(l2[2] - l1[2], 2))
+        l1 = dbw/2
+        l2 = dbw/2
+
+        # each wheel's contribution to movement (change)  in local reference frame
+        xR1 = 0.5 * wheel1.child.radius * wheel1.speed
+        xR2 = 0.5 * wheel2.child.radius * wheel2.speed
+        xR = xR1 + xR2
+        yR = 0
+
+        # each wheel's contribution to robot's rotation
+        omega1 = wheel1.child.radius * wheel1.speed / (2 * l1)
+        omega2 = -wheel2.child.radius * wheel2.speed / (2 * l2)
+        omega = omega1 + omega2
+
+        # new local position
+        xiR = pyrr.Vector3([xR, yR, omega])
+        print(f"new local {xiR}")
+
+        # new global position
+        rotation_matrix = np.array([[np.cos(self.theta), -np.sin(self.theta), 0],
+                                    [np.sin(self.theta),  np.cos(self.theta), 0],
+                                    [0,                   0,                  1]])
+        xiI = np.array([self.base_link.xyz[0],
+                       self.base_link.xyz[1],
+                       self.theta])
+        xiI = xiI + (rotation_matrix @ xiR)
+        self.base_link.xyz[0] = xiI[0]
+        self.base_link.xyz[1] = xiI[1]
+        xiI[2] = xiI[2] % math.radians(360)
+        self.base_link.update_rotation(xiI[2])
+        self.base_link.update_position(xiI[0], 0.1, xiI[1])
+        self.theta = xiI[2]
+
+    def update_values(self, pry, speeds):
         for i, wheel in enumerate(self.wheels):
             wheel.update(pry[i], speeds[i])
-
 
     def describe(self):
         print(f"Base link (name, dimensions LWH, xyz, rpy, color):\n{self.base_link.name}, {self.base_link.length} "

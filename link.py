@@ -25,6 +25,15 @@ class Link:
         )
         self.mesh = None
 
+    def update_position(self, x, y, z):
+        self.position = pyrr.matrix44.create_from_translation(
+            pyrr.Vector3([x, y, z])
+        )
+
+    def update_rotation(self, theta):
+        self.rotation = pyrr.matrix44.create_from_eulers(
+            eulers=[self.rpy[1], self.rpy[0], theta]
+        )
     def load_mesh(self):
         pass
 
