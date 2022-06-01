@@ -13,7 +13,7 @@ class Robot:
         urdf_links, urdf_joints, materials = self.extract_xacro(file_name)
         self.links = self.create_link_objects(urdf_links, materials)
         self.joints = self.create_joint_objects(urdf_joints)
-        # create base_link attribute and pop the object from links List, base link is box link
+        # determine which link is the base link of a robot
         self.base_link = self.find_base_link(self.links, self.joints)
         self.connect_joints_links(self.links, self.joints)
         self.number_of_wheels = 0
@@ -22,7 +22,7 @@ class Robot:
             if j.joint_type == "continuous":
                 self.number_of_wheels += 1
                 self.wheels.append(j)
-        self.theta = 0.0
+        self.theta = self.base_link.rpy[2]
         print("*** robot vytvoreny *** ")
 
     def move(self):
@@ -75,7 +75,7 @@ class Robot:
 
     def update_values(self, pry, speeds):
         for i, wheel in enumerate(self.wheels):
-            wheel.update(pry[i], speeds[i])
+            wheel.update_j_rotation(pry[i], speeds[i])
 
     def describe(self):
         print(f"Base link (name, dimensions LWH, xyz, rpy, color):\n{self.base_link.name}, {self.base_link.length} "

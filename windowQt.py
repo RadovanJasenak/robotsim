@@ -40,7 +40,7 @@ class Window(QMainWindow):
         # widgets
         self.ogl_widget = OpenGLWidget(self.robot)
         wheel_num = self.robot.number_of_wheels
-        #self.robot.describe()
+        # self.robot.describe()
 
         spd_labels = []
         self.spd_input_fields = []

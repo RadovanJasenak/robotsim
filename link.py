@@ -34,6 +34,7 @@ class Link:
         self.rotation = pyrr.matrix44.create_from_eulers(
             eulers=[self.rpy[1], self.rpy[0], theta]
         )
+
     def load_mesh(self):
         pass
 
@@ -44,6 +45,7 @@ class Link:
         raise Exception()
 
     def draw(self, model_location, model_matrix):
+        # draw all links of a robot on screen recursively
         # print("LINK ", self.name, self.get_scale())
         model = pyrr.matrix44.multiply(self.position, model_matrix)
         model = pyrr.matrix44.multiply(self.rotation, model)

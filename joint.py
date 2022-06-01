@@ -18,7 +18,8 @@ class Joint:
         )
         self.speed = 0
 
-    def update(self, pry, speed):
+    def update_j_rotation(self, pry, speed):
+        # updates joint rotation and sets rotation speed
         self.rotation = pyrr.matrix44.create_from_eulers(
             eulers=[pry[0], pry[1], pry[2]]
         )
