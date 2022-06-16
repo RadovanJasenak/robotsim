@@ -3,6 +3,7 @@
 layout (location=0) in vec3 vertexPos;
 layout (location=1) in vec4 vertexColor;
 layout (location=2) in vec3 vertexNormal;
+layout (location=3) in vec2 vertexTexture;
 
 uniform mat4 projection; // projection matrix
 uniform mat4 view; // view matrix 'camera'
@@ -11,11 +12,13 @@ uniform mat4 model; // combined translation and rotation
 out vec4 fragmentColor;
 out vec3 Normal;
 out vec3 fragPos;
+out vec2 fragTex;
 
 void main(){
             // clip space * view space * world space * local space
     gl_Position = projection * view *  model * vec4(vertexPos, 1.0);
     fragmentColor = vertexColor;
+    fragTex = vertexTexture;
     //lighting
     Normal = mat3(transpose(inverse(model))) * vertexNormal; // to make sure lighting is correct when doing transformations
     fragPos = vec3(model * vec4(vertexPos, 1.0)); // lighting calculation is done in world space

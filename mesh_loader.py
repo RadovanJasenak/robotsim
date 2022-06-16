@@ -21,11 +21,13 @@ class MeshLoader:
         # describing data stored in .obj, 0 - location, 1 - texture, 2 - normal
         # data stored in VBO, 0 - location, 1 - color (vec4), 3 - normal
         glEnableVertexAttribArray(0)
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, self.vertices.itemsize * 10, ctypes.c_void_p(0))
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, self.vertices.itemsize * 12, ctypes.c_void_p(0))
         glEnableVertexAttribArray(1)
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, self.vertices.itemsize * 10, ctypes.c_void_p(12))
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, self.vertices.itemsize * 12, ctypes.c_void_p(12))
         glEnableVertexAttribArray(2)
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, self.vertices.itemsize * 10, ctypes.c_void_p(28))
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, self.vertices.itemsize * 12, ctypes.c_void_p(28))
+        glEnableVertexAttribArray(3)
+        glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, self.vertices.itemsize * 12, ctypes.c_void_p(40))
 
     def load_mesh(self, filepath, color):
         # data from .obj file
@@ -74,6 +76,8 @@ class MeshLoader:
                         for c in color:
                             vertices.append(c)
                         for n in f_normals[i]:
+                            vertices.append(n)
+                        for n in f_textures[i]:
                             vertices.append(n)
 
                 line = f.readline()

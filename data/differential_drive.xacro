@@ -164,7 +164,7 @@
   </link>
 
   <joint name="nas_lidar_upevnenie" type="fixed">
-    <origin xyz="0.1 0 0.1" rpy="0 0 0"/>
+    <origin xyz="0.1 0 0.06" rpy="0 0 0"/>
     <parent link="telo"/>
     <child link="nas_lidar"/>
     <axis xyz="0 1 0"/>

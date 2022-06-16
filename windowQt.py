@@ -1,3 +1,5 @@
+import math
+
 from PyQt6.QtWidgets import (
     QMainWindow, QPushButton, QHBoxLayout,
     QLabel, QVBoxLayout, QWidget, QLineEdit, QFormLayout
@@ -5,12 +7,14 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from PyQt6.QtOpenGL import QOpenGLVersionProfile
 from PyQt6.QtGui import QSurfaceFormat
+from PyQt6.QtCore import Qt
 
 import sys
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
 
 import mesh_loader as ml
+from texture_loader import load_texture
 from robot import Robot
 import pyrr
 
@@ -39,6 +43,7 @@ class Window(QMainWindow):
 
         # widgets
         self.ogl_widget = OpenGLWidget(self.robot)
+        self.ogl_widget.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         wheel_num = self.robot.number_of_wheels
         # self.robot.describe()
 
@@ -56,9 +61,9 @@ class Window(QMainWindow):
             for x in range(0, 3):
                 input_fields.append(QLineEdit())
                 if x == 0:
-                    input_fields[x].setPlaceholderText("Pitch")
+                    input_fields[x].setPlaceholderText("roll")
                 if x == 1:
-                    input_fields[x].setPlaceholderText("Roll")
+                    input_fields[x].setPlaceholderText("Pitch")
                 if x == 2:
                     input_fields[x].setPlaceholderText("Yaw")
             self.rot_input_fields.append(input_fields)
@@ -70,6 +75,8 @@ class Window(QMainWindow):
                                 f"θ={round(self.robot.theta, 2)}")
         apply_button = QPushButton("Apply Changes")
         apply_button.clicked.connect(self.apply_button_func)
+        button_apply_steps = QPushButton("Apply 10x")
+        button_apply_steps.clicked.connect(self.button_steps_func)
 
         sidebar_container = QWidget()
         sidebar_container.setMaximumWidth(300)
@@ -96,6 +103,7 @@ class Window(QMainWindow):
 
         column_layout.addWidget(self.pos_label)
         column_layout.addWidget(apply_button)
+        column_layout.addWidget(button_apply_steps)
         form_layout.addRow(column_layout)
 
         sidebar_container.setLayout(form_layout)
@@ -144,11 +152,21 @@ class Window(QMainWindow):
                                f"z={round(self.robot.base_link.xyz[2], 2)} "
                                f"θ={round(self.robot.theta, 2)}")
 
+    def button_steps_func(self):
+        for _ in range(0, 10):
+            self.robot.move()
+            self.ogl_widget.update()
+            self.pos_label.setText(f"Position: x={round(self.robot.base_link.xyz[0], 2)} "
+                                   f"y={round(self.robot.base_link.xyz[1], 2)} "
+                                   f"z={round(self.robot.base_link.xyz[2], 2)} "
+                                   f"θ={round(self.robot.theta, 2)}")
+
 
 class OpenGLWidget(QOpenGLWidget):
     def __init__(self, robot: Robot):
         super().__init__()
         self.robot = robot
+        self.cam = Camera()
 
     def initializeGL(self):
         # set OpenGL version and profile
@@ -162,6 +180,8 @@ class OpenGLWidget(QOpenGLWidget):
 
         glClearColor(0.1, 0.2, 0.2, 1)
         glEnable(GL_DEPTH_TEST)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         # create perspective projection matrix
         self.projection = pyrr.matrix44.create_perspective_projection(
@@ -169,7 +189,7 @@ class OpenGLWidget(QOpenGLWidget):
             near=0.1, far=100.0)
 
         # view matrix, eye - position of camera cannot be [0, 0, 0], target i am looking at , up vector of the camera
-        camera_position = pyrr.Vector3([0, 1.5, 3])
+        camera_position = pyrr.Vector3([0, 0.2, 1])
         self.look_at = pyrr.matrix44.create_look_at(
             camera_position,
             pyrr.Vector3([0, 0, 0]),
@@ -179,18 +199,25 @@ class OpenGLWidget(QOpenGLWidget):
         self.projection_location = glGetUniformLocation(self.shader, "projection")
         self.view_location = glGetUniformLocation(self.shader, "view")
         self.model_location = glGetUniformLocation(self.shader, "model")
+        self.switch_location = glGetUniformLocation(self.shader, "switchColorToTex")
 
         # upload the projection & view matrices to the shader
         glUniformMatrix4fv(self.projection_location, 1, GL_FALSE, self.projection)
-        glUniformMatrix4fv(self.view_location, 1, GL_FALSE, self.look_at)
+        glUniformMatrix4fv(self.view_location, 1, GL_FALSE, self.cam.look_at)
 
         self.scene = Scene()
         glUniform3fv(glGetUniformLocation(self.shader, "lightColor"), 1, self.scene.light.color)
         glUniform3fv(glGetUniformLocation(self.shader, "lightPos"), 1, self.scene.light.position)
-        glUniform3fv(glGetUniformLocation(self.shader, "viewPos"), 1, self.look_at[0])
+        glUniform3fv(glGetUniformLocation(self.shader, "viewPos"), 1, self.cam.look_at[0])
 
         for link in self.robot.links:
             link.load_mesh()
+
+        self.cam.set_target(self.robot.base_link.xyz)
+        self.cam.move(self.view_location, self.shader)
+
+        self.texture = glGenTextures(1)
+        self.road = load_texture("textures/RoadCityWorn001_COL_1K.jpg", self.texture)
 
     def create_shader(self, vertexFilepath, fragmentFilepath):
         # load shaders from files and compile them to be used as a program
@@ -206,15 +233,24 @@ class OpenGLWidget(QOpenGLWidget):
         return shader
 
     def paintGL(self):
+        self.focusWidget()
         print("painting...")
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  # refresh screen
         glUseProgram(self.shader)  # here to make sure the correct one is being used
 
         # draw light & ground
+        glBindTexture(GL_TEXTURE_2D, self.texture)
+        glUniform1i(self.switch_location, 1)
         self.scene.draw_scene(self.model_location)
+        glUniform1i(self.switch_location, 0)
 
         # draw robot
         self.robot.base_link.draw(self.model_location, pyrr.matrix44.create_identity())
+
+        # move cam
+        self.cam.set_target(self.robot.base_link.xyz)
+        self.cam.move(self.view_location, self.shader)
 
     def resizeGL(self, w: int, h: int):
         glViewport(0, 0, w, h)
@@ -226,8 +262,8 @@ class OpenGLWidget(QOpenGLWidget):
 
 class Scene:
     def __init__(self):
-        self.ground = ml.MeshLoader("models/plane.obj", [0.412, 0.412, 0.412, 1.0])
-        self.ground_scale = pyrr.matrix44.create_from_scale(pyrr.Vector3([10.0, 10.0, 10.0]))
+        self.ground = ml.MeshLoader("models/plane.obj", [0.5, 0.5, 0.5, 1.0])
+        self.ground_scale = pyrr.matrix44.create_from_scale(pyrr.Vector3([10, 0.0, 7]))
         self.ground_position = pyrr.matrix44.create_from_translation(pyrr.Vector3([0, 0, 0]))
         self.ground_model = pyrr.matrix44.multiply(self.ground_scale, self.ground_position)
 
@@ -246,3 +282,27 @@ class Light:
     def __init__(self, position, color):
         self.position = pyrr.Vector3(position)
         self.color = pyrr.Vector3(color)
+
+
+class Camera:
+    def __init__(self):
+        self.pos = pyrr.Vector3([0., 2, 3])
+        self.target = pyrr.Vector3([0., 0., 0.])
+        self.up = pyrr.Vector3([0, 1, 0])
+        self.look_at = self.make_look_at()
+        self.deg = 270
+
+    def set_pos(self):
+        #self.pos = pyrr.Vector3([x, y, z])
+        self.look_at = self.make_look_at()
+
+    def set_target(self, xyz):
+        self.target = pyrr.Vector3([xyz[0], xyz[2], xyz[1]])
+        self.look_at = self.make_look_at()
+
+    def make_look_at(self):
+        return pyrr.matrix44.create_look_at(self.pos, self.target, self.up)
+
+    def move(self, view_loc, shader):
+        glUniformMatrix4fv(view_loc, 1, GL_FALSE, self.look_at)
+        glUniform3fv(glGetUniformLocation(shader, "viewPos"), 1, self.pos)

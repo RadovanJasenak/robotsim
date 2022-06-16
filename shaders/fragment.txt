@@ -3,10 +3,14 @@
 in vec4 fragmentColor;
 in vec3 Normal;
 in vec3 fragPos;
+in vec2 fragTex;
 
 uniform vec3 lightColor;
 uniform vec3 lightPos;
 uniform vec3 viewPos;
+
+uniform sampler2D samplerTexture;
+uniform int switchColorToTex;
 
 out vec4 color;
 
@@ -29,5 +33,10 @@ void main(){
     vec3 specular = specularStrength * spec * lightColor;
 
     vec4 result = vec4(ambient + diffuse + specular, 1.0) * fragmentColor;
-    color = result;
+    if(switchColorToTex == 0){
+        color = result;
+    }
+    if(switchColorToTex == 1){
+        color = texture(samplerTexture, fragTex) * (result.rgba + vec4(0.3, 0.3, 0.3, 0.0));
+    }
 }

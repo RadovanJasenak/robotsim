@@ -27,7 +27,6 @@ class Robot:
 
     def move(self):
         # for differential drive robots only ( 2 wheels)
-        # TODO: P is not centre of robot
         if self.number_of_wheels != 2:
             return
         wheel1 = self.wheels[0]
