@@ -3,3 +3,4 @@ pyrr==0.10.3
 numpy==1.22.3
 glfw==2.5.1
 PyQt6~=6.3.0
+Pillow~=7.0.0

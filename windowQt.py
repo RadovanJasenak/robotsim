@@ -45,13 +45,13 @@ class Window(QMainWindow):
         self.ogl_widget = OpenGLWidget(self.robot)
         self.ogl_widget.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         wheel_num = self.robot.number_of_wheels
-        # self.robot.describe()
+        #self.robot.describe()
 
         spd_labels = []
         self.spd_input_fields = []
         rot_labels = []
         self.rot_input_fields = []
-        pry_labels = [QLabel("Pitch"), QLabel("Roll"), QLabel("Yaw")]
+        pry_labels = [QLabel("Roll"), QLabel("Pitch"), QLabel("Yaw")]
 
         for i in range(0, wheel_num):
             spd_labels.append(QLabel(f"{self.robot.wheels[i].name} "))
@@ -103,7 +103,7 @@ class Window(QMainWindow):
 
         column_layout.addWidget(self.pos_label)
         column_layout.addWidget(apply_button)
-        column_layout.addWidget(button_apply_steps)
+        # column_layout.addWidget(button_apply_steps)
         form_layout.addRow(column_layout)
 
         sidebar_container.setLayout(form_layout)
@@ -178,7 +178,7 @@ class OpenGLWidget(QOpenGLWidget):
         self.shader = self.create_shader("shaders/vertex.txt", "shaders/fragment.txt")
         glUseProgram(self.shader)
 
-        glClearColor(0.1, 0.2, 0.2, 1)
+        glClearColor(0.1, 0.45, 0.55, 1)
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -217,7 +217,7 @@ class OpenGLWidget(QOpenGLWidget):
         self.cam.move(self.view_location, self.shader)
 
         self.texture = glGenTextures(1)
-        self.road = load_texture("textures/RoadCityWorn001_COL_1K.jpg", self.texture)
+        self.road = load_texture("textures/RoadCityWorn001_COL_3K.jpg", self.texture)
 
     def create_shader(self, vertexFilepath, fragmentFilepath):
         # load shaders from files and compile them to be used as a program

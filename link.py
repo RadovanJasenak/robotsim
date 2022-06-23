@@ -86,8 +86,10 @@ class Box(Link):
         self.mesh = ml.MeshLoader("models/cube.obj", self.color)
 
     def describe(self):
-        print(f"Link Box (name, dimensions LWH, shape, xyz, rpy, color):\n{self.name}, {self.length} {self.width} "
-              f"{self.height}, {self.shape}, {self.xyz}, {self.rpy}, {self.color}\n")
+        # print(f"Link Box (name, dimensions LWH, shape, xyz, rpy, color):\n{self.name}, {self.length} {self.width} "
+        #       f"{self.height}, {self.shape}, {self.xyz}, {self.rpy}, {self.color}\n")
+        print(f"Link\nname: {self.name}\nshape: {self.shape}\nlength, width, height: {self.length}, {self.height}, {self.width}\n"
+              f"xyz: {self.xyz}\nrpy:{self.rpy}\ncolor: {self.color}\n")
 
     def get_scale(self):
         if hasattr(self, 'scale'):
@@ -109,8 +111,10 @@ class Cylinder(Link):
         self.mesh = ml.MeshLoader("models/cylinder.obj", self.color)
 
     def describe(self):
-        print(f"Link Cylinder (name, radius, length, shape, xyz, rpy,color):\n{self.name}, {self.radius}, {self.length}, "
-              f"{self.shape}, {self.xyz}, {self.rpy}, {self.color}\n")
+        # print(f"Link Cylinder (name, radius, length, shape, xyz, rpy,color):\n{self.name}, {self.radius}, {self.length}, "
+        #       f"{self.shape}, {self.xyz}, {self.rpy}, {self.color}\n")
+        print(f"Link\nname: {self.name}\nshape: {self.shape}\nlength: {self.length}\nradius: {self.radius}\n"
+              f"xyz: {self.xyz}\nrpy:{self.rpy}\ncolor: {self.color}\n")
 
     def get_scale(self):
         if hasattr(self, 'scale'):
@@ -131,8 +135,10 @@ class Sphere(Link):
         self.mesh = ml.MeshLoader("models/sphere.obj", self.color)
 
     def describe(self):
-        print(f"Link Sphere (name, radius, shape, xyz, rpy, color):\n{self.name}, {self.radius}, "
-              f"{self.shape}, {self.xyz}, {self.rpy}, {self.color}\n")
+        # print(f"Link Sphere (name, radius, shape, xyz, rpy, color):\n{self.name}, {self.radius}, "
+        #       f"{self.shape}, {self.xyz}, {self.rpy}, {self.color}\n")
+        print(f"Link\nname: {self.name}\nshape: {self.shape}\nradius: {self.radius}\n"
+              f"xyz: {self.xyz}\nrpy:{self.rpy}\ncolor: {self.color}\n")
 
     def get_scale(self):
         if hasattr(self, 'scale'):
